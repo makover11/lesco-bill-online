@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LESCO Bill Studio - Check & Track Electricity Bills</title>
+  <link rel="stylesheet" href="fulltab.css">
+</head>
+<body>
+  <div class="studio-app">
+    <!-- Top Navigation Bar -->
+    <header class="studio-navbar">
+      <div class="nav-brand">
+        <div class="nav-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+          </svg>
+        </div>
+        <div class="nav-titles">
+          <h1 class="nav-title">LESCO Bill Studio</h1>
+          <span class="nav-badge">Enterprise Viewer & Tracker</span>
+        </div>
+      </div>
+
+      <div class="nav-center-stats">
+        <div class="nav-stat-chip">
+          <span class="stat-dot" id="netStatusDot"></span>
+          <span class="stat-text" id="netStatusText">Online</span>
+        </div>
+        <div class="nav-stat-chip">
+          <span class="stat-label">Saved Accounts:</span>
+          <strong class="stat-val" id="navSavedCount">0</strong>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button type="button" class="btn btn-outline" id="btnExportAccounts" title="Backup saved accounts to JSON">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          Export
+        </button>
+        <button type="button" class="btn btn-outline" id="btnImportAccounts" title="Import saved accounts from JSON">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+          </svg>
+          Import
+        </button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none">
+      </div>
+    </header>
+
+    <!-- Studio Main Workspace (Two Decks Layout) -->
+    <main class="studio-layout">
+      <!-- LEFT DECK: Controls, Saved Accounts & History -->
+      <aside class="studio-deck deck-left">
+        <!-- Search Card -->
+        <div class="studio-card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"></path>
+              </svg>
+              Check Electricity Bill
+            </h2>
+          </div>
+
+          <form id="studioSearchForm" novalidate>
+            <!-- Tabs -->
+            <div class="g-tabs" role="tablist">
+              <button type="button" class="g-tab active" id="tabRef" role="tab" aria-selected="true" data-type="refno">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Reference Number (14)
+              </button>
+              <button type="button" class="g-tab" id="tabCust" role="tab" aria-selected="false" data-type="appno">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Customer ID (10)
+              </button>
+              <span class="g-tab-slider" id="tabSlider"></span>
+            </div>
+
+            <!-- Input Group -->
+            <div class="g-input-group">
+              <label class="g-label" for="studioInput" id="inputLabel">14-Digit Reference Number</label>
+              <div class="g-input-wrap">
+                <input type="text" id="studioInput" class="g-input" placeholder="00 00000 0000000" inputmode="numeric" autocomplete="off" spellcheck="false" required>
+                <div class="g-val-icon" id="valIcon" title="Valid digits">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="#1159af" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="g-hint" id="inputHint">Enter digits without spaces or dashes.</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-row">
+              <button type="submit" class="btn btn-primary" id="btnCheckBill">
+                <span class="spinner" id="btnSpinner"></span>
+                <span class="btn-text" id="btnCheckLabel">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"></path>
+                  </svg>
+                  Check LESCO Bill
+                </span>
+              </button>
+              <button type="button" class="btn btn-secondary" id="btnResetSearch">Reset</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Saved Meter Accounts Management -->
+        <div class="studio-card">
+          <div class="card-header space-between">
+            <h2 class="card-title">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              Saved Meters
+            </h2>
+            <button type="button" class="btn-link" id="btnOpenAddAccountModal">+ Add Meter</button>
+          </div>
+
+          <div class="accounts-container" id="savedAccountsContainer">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Recent Search History -->
+        <div class="studio-card">
+          <div class="card-header space-between">
+            <h2 class="card-title">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Search History
+            </h2>
+            <button type="button" class="btn-link text-danger" id="btnClearHistory">Clear All</button>
+          </div>
+
+          <div class="history-container" id="historyContainer">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Reference Number Breakdown Guide -->
+        <div class="studio-card guide-card">
+          <div class="card-header">
+            <h3 class="card-title-sm">
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Understanding LESCO Identifiers
+            </h3>
+          </div>
+          <div class="guide-content">
+            <p><strong>14-Digit Reference Number:</strong> Format <code>12 12345 1234567</code></p>
+            <ul class="guide-list">
+              <li>First 2 digits: Batch / Sub-division code</li>
+              <li>Next 5 digits: Meter book & route number</li>
+              <li>Last 7 digits: Consumer account sequence</li>
+            </ul>
+            <p><strong>10-Digit Customer ID:</strong> Unique alphanumeric account ID printed right above your reference number.</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT DECK: Active Bill Workspace & High-Definition Viewer -->
+      <section class="studio-deck deck-right">
+        <!-- Empty State (When no bill checked yet) -->
+        <div class="empty-state" id="emptyStateWorkspace">
+          <div class="empty-icon-wrap">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1159af" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h2 class="empty-title">LESCO Duplicate Bill Workspace</h2>
+          <p class="empty-desc">Enter your 14-digit Reference Number or 10-digit Customer ID in the panel on the left to inspect, print, and track your electricity bill.</p>
+          <div class="empty-quick-tips">
+            <span class="tip-tag">✓ 100% Authentic LESCO Duplicate Bill</span>
+            <span class="tip-tag">✓ One-Click Print / Save PDF</span>
+            <span class="tip-tag">✓ Offline Bill Archive</span>
+          </div>
+        </div>
+
+        <!-- Active Bill Workspace Container -->
+        <div class="bill-workspace" id="billWorkspace" style="display:none">
+          <!-- Executive Overview Metric Cards -->
+          <div class="overview-grid" id="overviewGrid">
+            <div class="stat-card highlight">
+              <span class="stat-card-label">Payable Within Due Date</span>
+              <strong class="stat-card-value text-primary" id="cardAmountDue">Rs. 0</strong>
+              <span class="stat-card-sub" id="cardMonth">Current Billing Month</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-label">Due Date</span>
+              <strong class="stat-card-value text-danger" id="cardDueDate">-</strong>
+              <span class="stat-card-sub">Payment deadline</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-label">Payable After Due Date</span>
+              <strong class="stat-card-value" id="cardAmountLate">Rs. 0</strong>
+              <span class="stat-card-sub">With late surcharge</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-card-label">Units Consumed</span>
+              <strong class="stat-card-value" id="cardUnits">-</strong>
+              <span class="stat-card-sub">Kilowatt-hours (kWh)</span>
+            </div>
+          </div>
+
+          <!-- Secondary Details Strip -->
+          <div class="details-strip" id="detailsStrip">
+            <div class="detail-cell">
+              <span class="detail-label">Consumer Name:</span>
+              <strong class="detail-val" id="cellConsumerName">-</strong>
+            </div>
+            <div class="detail-cell">
+              <span class="detail-label">Reference No:</span>
+              <strong class="detail-val font-mono" id="cellRefNo">-</strong>
+            </div>
+            <div class="detail-cell">
+              <span class="detail-label">Status:</span>
+              <span class="status-pill status-active" id="cellStatus">Active</span>
+            </div>
+          </div>
+
+          <!-- Studio Toolbar -->
+          <div class="studio-toolbar">
+            <div class="tb-left">
+              <span class="tb-title" id="tbBillTitle">LESCO Official Duplicate Bill</span>
+            </div>
+            <div class="tb-right">
+              <button type="button" class="btn btn-sm btn-outline" id="btnStudioSaveMeter" title="Save this account">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                </svg>
+                Save Meter
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnStudioCopy" title="Copy payment summary">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+                </svg>
+                Copy Details
+              </button>
+              <button type="button" class="btn btn-sm btn-outline" id="btnStudioDownload" title="Download HTML copy of bill">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                </svg>
+                Download HTML
+              </button>
+              <button type="button" class="btn btn-sm btn-primary" id="btnStudioPrint" title="Print Bill or Save to PDF">
+                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print / Save PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- High-Definition Bill Frame -->
+          <div class="studio-viewer-wrap">
+            <iframe id="studioIframe" class="studio-iframe" title="LESCO Bill High Definition Viewer" sandbox="allow-same-origin allow-modals allow-popups"></iframe>
+          </div>
+        </div>
+
+        <!-- Studio Not Found State -->
+        <div class="not-found-workspace" id="notFoundWorkspace" style="display:none">
+          <div class="nf-box">
+            <div class="nf-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <h3 class="nf-title">Bill Record Not Found</h3>
+            <p class="nf-desc" id="studioNotFoundDesc">No active bill record was returned for this identifier by LESCO billing servers.</p>
+            <div class="nf-checklist">
+              <strong>Checklist:</strong>
+              <ul>
+                <li>Verify you have selected the correct tab (14-digit Reference vs 10-digit Customer ID).</li>
+                <li>Ensure there are no leading or trailing letters in the reference number.</li>
+                <li>New electricity bills are typically generated by LESCO between the 5th and 10th of every month.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal for Adding / Editing Meter Account -->
+    <div class="modal-backdrop" id="accountModal" style="display:none">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 class="modal-title" id="modalTitle">Save Meter Account</h3>
+          <button type="button" class="btn-close" id="btnCloseModal">&times;</button>
+        </div>
+        <form id="modalForm">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label" for="modalType">Account Type</label>
+              <select id="modalType" class="form-select">
+                <option value="refno">14-Digit Reference Number</option>
+                <option value="appno">10-Digit Customer ID</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modalNumber">Identifier Digits</label>
+              <input type="text" id="modalNumber" class="form-input" placeholder="Enter reference or customer digits" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modalNickname">Meter Nickname / Label</label>
+              <input type="text" id="modalNickname" class="form-input" placeholder="e.g. Home, Factory, Shop, Rental" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveModal">Save Account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="studio-toast" id="studioToast" role="alert" aria-live="polite"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="lesco-bill-core.js"></script>
+  <script src="fulltab.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Check LESCO Online Bill",
+  "short_name": "LESCO Bill",
+  "version": "1.0.0",
+  "description": "Check, view, print, and track LESCO electricity bills using 14-digit Reference Number or 10-digit Customer ID with offline history.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Check LESCO Online Bill",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "contextMenus"
+  ],
+  "host_permissions": [
+    "https://lesco-proxy.realbilalmd.workers.dev/*"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Open LESCO Bill Checker"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "check-lesco-online-bill@softrank.tools",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}
